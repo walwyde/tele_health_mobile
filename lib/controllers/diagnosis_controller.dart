@@ -10,12 +10,12 @@ class DiagnosisController extends GetxController {
   var confidence = 0.0.obs;
   var drugs = <Map<String, dynamic>>[].obs;
   var diseaseId = ''.obs;
-
+  var diseaseDescription = ''.obs;
   
   // Added Loading State
   var isLoading = false.obs;
 
-  Future<bool> diagnoseFromSymptoms(List<String> symptoms) async {
+ Future<bool> diagnoseFromSymptoms(List<String> symptoms) async {
   if (symptoms.isEmpty) return false;
 
   selectedSymptoms
@@ -23,8 +23,23 @@ class DiagnosisController extends GetxController {
     ..addAll(symptoms);
 
   await diagnose();
+  
+  try {
+    final diseaseInfo = await supabase
+        .from('diseases')
+        .select('description')
+        .eq('id', diseaseId)
+        .single();
+    
+    diseaseDescription.value = diseaseInfo['description'] ?? '';
+  } catch (e) {
+    print('⚠️ Error fetching disease description: $e');
+    diseaseDescription.value = '';
+  }
+
   return disease.value.isNotEmpty;
 }
+
 
 
   Future<void> diagnose() async {
